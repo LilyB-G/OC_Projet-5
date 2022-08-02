@@ -32,8 +32,7 @@ function showProduct(kanapSheet) {
     
     */
 
-    //productId
-    let id = oneKanap._id;
+
     //console.log(id);
 
     document.title = kanapSheet.name;
@@ -81,8 +80,9 @@ function showProduct(kanapSheet) {
 
 //EventListener to add to cart
 let button = document.getElementById("addToCart");
-button.addEventListener("click", function () {
-
+button.addEventListener("click", function (e) {
+    //productId
+    let id = kanapSheet._id;
     //Choice and sent
 
     let colorValue = document.getElementById("colors").value;
@@ -94,7 +94,7 @@ button.addEventListener("click", function () {
     if (quantityValue >= 1 && colorValue != "") { //quantity chosen color chosen => OK
 
         const selectProduct = {                  //Item created in LS
-            id: oneKanap._id,
+            id: id,
             color: colorValue,
             quantity: quantityValue,
         };
@@ -117,6 +117,9 @@ button.addEventListener("click", function () {
         localStorage.setItem("cart", JSON.stringify(myCart));
 
         alert("Votre sélection est ajoutée au panier");
+
+        //window.location.href = "cart.html"
+
     } else {
 
         /*if (quantityValue < 1) {
