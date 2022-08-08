@@ -1,5 +1,4 @@
 //Récupération de l'id dans l'URL
-//Récupération de l'id dans l'URL
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const productId = urlParams.get("id");
@@ -10,30 +9,13 @@ fetch(`http://localhost:3000/api/products/${productId}`)
     .then(async function (data) {
         oneKanap = await data;
         showProduct(oneKanap);
+       // console.log("oneKanap: " + JSON.stringify(oneKanap));
     })
 
     .catch(error => alert("Zut ! Le serveur ne répond pas" + error));
 
 //Show Kanap sheet
 function showProduct(kanapSheet) {
-
-    /*
-    
-     afficher les infos ?
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    */
-
-
-    //console.log(id);
 
     document.title = kanapSheet.name;
     let parent = document.querySelector(".item__img");
@@ -80,62 +62,78 @@ function showProduct(kanapSheet) {
 
 //EventListener to add to cart
 let button = document.getElementById("addToCart");
+
 button.addEventListener("click", function (e) {
-    //productId
-    let id = kanapSheet._id;
-    //Choice and sent
+    r = e.target;
+    let actualColorValue = document.getElementById("colors").value;
+    let actualQuantityValue = document.getElementById("quantity").value;
+    if (r) {
+        actuCart(actualColorValue, actualQuantityValue);
 
-    let colorValue = document.getElementById("colors").value;
-    let quantityValue = +document.getElementById("quantity").value;
-    let myCart = [];
-    if (localStorage.getItem("cart")) {
-        myCart = JSON.parse(localStorage.getItem("cart"));
-    }
-    if (quantityValue >= 1 && colorValue != "") { //quantity chosen color chosen => OK
+    };
+});
 
-        const selectProduct = {                  //Item created in LS
-            id: id,
-            color: colorValue,
-            quantity: quantityValue,
-        };
+//actuCart(actualColorValue, actualQuantityValue);
 
-        let newProduct = true
-
-        for (let product of myCart) { //permet de créer une boucle array qui parcourt un objet itérable
-
-            //objet existe 
-            if (product.id === selectProduct.id && product.color === selectProduct.color) {
-                product.quantity += selectProduct.quantity; //Qtity changed 
-                //+= opérateur d'addition et d'affectation calcule la somme (la concaténation) de ses 2 opérandes et affecte le résultat à la variable à gauche
-                newProduct = false
-            }
-        }
-        if (newProduct === true) {
-            myCart.push(selectProduct);
-        }
-
-        localStorage.setItem("cart", JSON.stringify(myCart));
-
-        alert("Votre sélection est ajoutée au panier");
-
-        //window.location.href = "cart.html"
-
+//productId
+//let id = kanapSheet._id;
+//Choice and sent
+function actuCart(colorValue, quantityValue) {
+    if (quantityValue >= 1 && colorValue != "") {
+        updateLine(quantityValue, colorValue, productId);
     } else {
 
-        /*if (quantityValue < 1) {
-            alert("information manquante : Sélectionnez une quantité");
-        };
-        if (colorValue == ""); {
-            alert("information manquante : Sélectionnez une couleur");*/
-        function alertError() {
-            if (quantityValue < 1) {
-                return ("Sélectionnez une quantité");
-            }
-            if (colorValue == ""); {
-                return ("Sélectionnez une couleur");
-            }
-        }
-        alert("information manquante :" + alertError());
+        alertError(colorValue, quantityValue);
     };
+
 }
-);            
+function updateLine(quantityValue, colorValue, productId) {
+    let myCart = {};
+    if (localStorage.getItem("cart")) {
+        myCart = JSON.parse(localStorage.getItem("cart"));
+        console.log("cart: " + JSON.stringify(myCart));
+    };
+    let i = 0;
+    for (let product of myCart) { //permet de créer une boucle array qui parcourt un objet itérable
+
+        //objet existe 
+        if (product.id === productId && product.color === colorValue) { //condition la ligne existe
+            if (product.quantity != quantityValue) {
+                Object.assign( myCart[i] , { "quantity": Number(product.quantity) + Number(quantityValue) } );
+              //  console.log("myCart i : " + JSON.stringify(myCart[i]));
+                setItem(myCart);
+              //  console.log("myCart : " + JSON.stringify(myCart));
+                alert("quantité modifiée");
+            };
+
+        };
+    };
+    if (!myCart.find(o => o.id == productId) || myCart.find(o => o.id == productId) && !myCart.find(o => o.color == colorValue)) {
+        myCart.push({ "id": productId, "color": colorValue, "quantity": quantityValue });
+       // console.log("mycart.push : " + JSON.stringify(myCart));
+        alert("Votre sélection est ajoutée au panier");
+        setItem(myCart);
+    };
+
+};
+
+function setItem(myCart) { localStorage.setItem("cart", JSON.stringify(myCart)); };
+//window.location.href = "cart.html"
+
+function alertError(colorValue, quantityValue) {
+
+    if (colorValue === "") {
+        alert("Sélectionnez une couleur");
+    }
+    else {
+        if (quantityValue < 1 && Number.isInteger(quantityValue)) {
+            alert("Sélectionnez une quantité");
+        }
+        else {
+            alert("saisir un entier svp");
+
+        }
+
+    }
+    //alert("information manquante :" + alertError());
+};
