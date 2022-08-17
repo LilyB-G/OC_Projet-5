@@ -4,12 +4,12 @@ const myCart = JSON.parse(basket);
 
 //Appel fetch sur api/product à la condition que localstorage cart existe
 if (localStorage.getItem("cart")) {
-  
+
   fetch(`http://localhost:3001/api/products/`)
     .then(response => response.json())
     .then(async function (data) {
       let dataSet = await data;
-    
+
       //      console.log('dataSet : ' + JSON.stringify(dataSet));
 
       let htmlData = onLoad(dataSet, myCart);  // appel Dom
@@ -174,7 +174,7 @@ function iniHtml(data) {     // DOM
   changeQty.addEventListener('input', (e) => {
     newQty = e.target.value;
 
-    let ret = QtyEventHandler(changeQty, newQty, data);
+    let ret = QtyEventHandler(changeQty, newQty, data); // changeQty de type event ; newQty = value , data = tableau formatté issu du panier
     if (ret == "refresh") {
       location.reload();
     };
@@ -339,43 +339,38 @@ function postForm(objdoc, htmlData) {
     };
     //console.log("htmlData: " + JSON.stringify(htmlData));
     //console.log("contact: " + JSON.stringify(contact));
-	  let idProd = [];
-	for (let obj of htmlData ) { idProd.push(obj.id);};
+    let idProd = [];
 
-let orderToPost = {
+    for (let obj of htmlData) {
+      idProd.push(obj.id);
+    };
+
+    let orderToPost = {
       contact: contact,
       products: idProd,
     };
+    
+    let url = "http://localhost:3001/api/products/order";
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderToPost),
+    })
+      .then((response) => response.json())
+      .then(async (order) => {			// async au moment de définir orderId
+        let orderId = await order.orderId;
+        // console.log(orderId);
 
-//    console.log(JSON.stringify(orderToPost));
+        window.location.assign("confirmation.html?id=" + orderId /*+ "content-type: application/javascript;charset=utf-8"*/);
 
-    //envoyer le formulaire + le LS (myCart) au serveur
+        // ici suppression "cart"
+        if (orderId) {
+          console.log("cart erased");
+        };
 
-
-    //fetch à partir de l'API avec les données postOrder
-  //fetch("http://192.168.0.50:3001/api/products/order"
-      
-          let url = "http://localhost:3001/api/products/order";
-       fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(orderToPost),
-        })
-        .then((response) => response.json())
-        .then(async (order) => {			// async au moment de définir orderId
-                let orderId = await order.orderId;
-               // console.log(orderId);
-       
-	 window.location.assign("confirmation.html?id=" + orderId /*+ "content-type: application/javascript;charset=utf-8"*/);
-
-    // ici suppression "cart"
-	if (orderId){
-		console.log( "cart erased");
-	};
-
-  	});
+      });
   });
 
 };
