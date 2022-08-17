@@ -4,12 +4,12 @@ const urlParams = new URLSearchParams(queryString);
 const productId = urlParams.get("id");
 
 //Appel vers l'API avec ID produit
-fetch(`http://localhost:3000/api/products/${productId}`)
+fetch(`http://localhost:3001/api/products/${productId}`)
     .then(response => response.json())
     .then(async function (data) {
         oneKanap = await data;
         showProduct(oneKanap);
-       // console.log("oneKanap: " + JSON.stringify(oneKanap));
+        // console.log("oneKanap: " + JSON.stringify(oneKanap));
     })
 
     .catch(error => alert("Zut ! Le serveur ne répond pas" + error));
@@ -88,29 +88,30 @@ function actuCart(colorValue, quantityValue) {
 
 }
 function updateLine(quantityValue, colorValue, productId) {
-    let myCart = {};
+    let myCart = [];
     if (localStorage.getItem("cart")) {
         myCart = JSON.parse(localStorage.getItem("cart"));
         console.log("cart: " + JSON.stringify(myCart));
-    };
-    let i = 0;
-    for (let product of myCart) { //permet de créer une boucle array qui parcourt un objet itérable
 
-        //objet existe 
-        if (product.id === productId && product.color === colorValue) { //condition la ligne existe
-            if (product.quantity != quantityValue) {
-                Object.assign( myCart[i] , { "quantity": Number(product.quantity) + Number(quantityValue) } );
-              //  console.log("myCart i : " + JSON.stringify(myCart[i]));
-                setItem(myCart);
-              //  console.log("myCart : " + JSON.stringify(myCart));
-                alert("quantité modifiée");
+        let i = 0;
+        for (let product of myCart) { //permet de créer une boucle array qui parcourt un objet itérable
+
+            //objet existe 
+            if (product.id === productId && product.color === colorValue) { //condition la ligne existe
+                
+                    Object.assign(myCart[i], { "quantity": Number(product.quantity) + Number(quantityValue) });
+                    //  console.log("myCart i : " + JSON.stringify(myCart[i]));
+                    setItem(myCart);
+                    //  console.log("myCart : " + JSON.stringify(myCart));
+                    alert("quantité modifiée");
+                
+
             };
-
         };
     };
     if (!myCart.find(o => o.id == productId) || myCart.find(o => o.id == productId) && !myCart.find(o => o.color == colorValue)) {
         myCart.push({ "id": productId, "color": colorValue, "quantity": quantityValue });
-       // console.log("mycart.push : " + JSON.stringify(myCart));
+        // console.log("mycart.push : " + JSON.stringify(myCart));
         alert("Votre sélection est ajoutée au panier");
         setItem(myCart);
     };

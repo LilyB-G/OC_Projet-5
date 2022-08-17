@@ -1,60 +1,50 @@
 // Tu récupêres les données de localStorag
 let basket = localStorage.getItem("cart");
 const myCart = JSON.parse(basket);
-const url = "";
-let htmlData = [];
-let dataSet = [];
 
-console.log('myCart : ' + JSON.stringify(myCart));
-
-//fetch
+//Appel fetch sur api/product à la condition que localstorage cart existe
 if (localStorage.getItem("cart")) {
-  //for (let i = 0; i < myCart.length; i++){
-  //fetch(`http://192.168.0.50:3001/api/products/` )
-  fetch(`http://localhost:3000/api/products/`)
+  
+  fetch(`http://localhost:3001/api/products/`)
     .then(response => response.json())
     .then(async function (data) {
-      dataSet = await data;
-      //format(dataSet);
+      let dataSet = await data;
+    
       //      console.log('dataSet : ' + JSON.stringify(dataSet));
 
-      htmlData = onLoad(dataSet, myCart);
+      let htmlData = onLoad(dataSet, myCart);  // appel Dom
 
       for (let obj of htmlData) {
         //console.log("data" + htmlData.indexOf(obj) + " :" + JSON.stringify(obj)); 
-        iniHtml(obj);
+        iniHtml(obj);   // construction html pour chaque ligne formatté selon le dom
         let objDoc = window.document;
         iniForm(objDoc);
-
       }
+      postForm(window.document, htmlData);
     });
   //}
 };
 // .catch(error => console.log("Erreur fetch: " + error));
 
 function formatTab(dataSet, myCart) {
-  let lines = [];
+  let cartLine = [];
   let line = [];
   let i = 0;
 
   for (let obj of myCart) {
 
-    line = dataSet.filter(o => o._id == obj.id);
-    lines[i] = obj;
+    line = dataSet.filter(o => o._id == obj.id); // on filtre les objets api/products pour ne garder que les articles contenus dans le panier
+    cartLine[i] = obj;
 
-    Object.assign(lines[i], { "altTxt": line[0].altTxt }, { "description": line[0].description }, { "imageUrl": line[0].imageUrl }, { "name": line[0].name }, { "price": line[0].price });
+    Object.assign(cartLine[i], { "altTxt": line[0].altTxt }, { "description": line[0].description }, { "imageUrl": line[0].imageUrl }, { "name": line[0].name }, { "price": line[0].price });
     delete line[0].colors;
-
     //console.log('line' + i + ' : ' + JSON.stringify(line));
-
     i++;
   };
-  console.log('lines: ' + JSON.stringify(lines));
-
-  return lines;
+  // console.log('lines: ' + JSON.stringify(lines));
+  return cartLine;
 
 };
-
 
 function iniHtml(data) {     // DOM
 
@@ -72,7 +62,6 @@ function iniHtml(data) {     // DOM
 
   //intégration des données du produit
   //Show img items in cart.html
-
   let tableau = document.createElement("table");
   tableau.setAttribute("width", "100%");
   article.appendChild(tableau);
@@ -91,7 +80,6 @@ function iniHtml(data) {     // DOM
   let imgCart = document.createElement("cartItemImg");
   imgCart.className = "cart__item__img";
   colImg.appendChild(imgCart);
-
 
   let image = document.createElement("img");
   //image.setAttribute("src", data[0].imageUrl);
@@ -179,22 +167,18 @@ function iniHtml(data) {     // DOM
   changeQty.setAttribute("width", "8px");
   changeQty.setAttribute("min", "1");
   changeQty.setAttribute("max", "100");
-  Object.assign(changeQty , {"color": data.color, "id": data.id });
+  Object.assign(changeQty, { "color": data.color, "id": data.id });
   changeQty.value = data.quantity;
   imgCart.appendChild(changeQty);
-
-  
   //console.log ("changeQty :" + typeof(changeQty.value + "data[0].quantity:" + typeof(data[0].quantity)));
-
   changeQty.addEventListener('input', (e) => {
     newQty = e.target.value;
 
-    let ret = QtyEventHandler(window.document, changeQty , newQty , data);
-    if ( ret == "refresh" ) {
-        location.reload();
+    let ret = QtyEventHandler(changeQty, newQty, data);
+    if (ret == "refresh") {
+      location.reload();
     };
   });
-
 
   //Settings delete
   deleteDiv = document.createElement("div");
@@ -207,12 +191,12 @@ function iniHtml(data) {     // DOM
   deleteP.textContent = "Supprimer"
   deleteP.setAttribute('data-id', cartContent);
   deleteP.setAttribute("Align", "right");
-  
+
   deleteP.addEventListener('click', (e) => {
-    let ret = supprlign( data.color ,data.id );
-    if ( ret == "refresh" ) {
+    let ret = supprlign(data.color, data.id);
+    if (ret == "refresh") {
       location.reload();
-  };
+    };
   });
 };
 //Calcule le total produit et le total prix au chargement de la page
@@ -246,36 +230,31 @@ function updateValueQty(qtyVal) {
     alertError(qtyVal);
     //   return console.log(typeof(qtyVal))};
   }
-}
-//Gestion des modifications et suppressions de produits
-function setIdClient(currentCde) {
-
-  return idClient;
 };
 
-function update( quantityValue, colorValue, productId) {
+function update(quantityValue, colorValue, productId) {
   let myCart = {};
   let readyForUpdate = "false"
-  
+
   if (localStorage.getItem("cart")) {
     myCart = JSON.parse(localStorage.getItem("cart"));
-    console.log("cart: " + JSON.stringify(myCart));
+    //console.log("cart: " + JSON.stringify(myCart));
   };
-  let i = 0;
+  //let i = 0;
   for (let product of myCart) { //permet de créer une boucle array qui parcourt un objet itérable
 
     //objet existe 
     if (product.id === productId && product.color === colorValue) { //condition la ligne existe
       if (product.quantity != quantityValue) {
-        
+
         product.quantity = quantityValue;
-        
+
         readyForUpdate = "true";
-     };
+      };
     };
     i++;
   };
-  
+
   if (readyForUpdate) {
 
     localStorage.setItem("cart", JSON.stringify(myCart));
@@ -284,69 +263,60 @@ function update( quantityValue, colorValue, productId) {
   };
 };
 
-function supprlign( color , id ) {
+function supprlign(color, id) {
 
   let newCart = [];
   let myCart = JSON.parse(localStorage.getItem("cart"));
-  newCart = myCart.filter(o => !( o.id == id && o.color == color ));
-    
+  newCart = myCart.filter(o => !(o.id == id && o.color == color));
+
   localStorage.setItem("cart", JSON.stringify(newCart));
   return "refresh";
 };
 //Ecoute au changement du champ de quantité (ni décimaux, ni lettres)
-function QtyEventHandler(document , input , newQty , lineOfMyCart ) {
-  
+function QtyEventHandler(input, newQty, lineOfMyCart) {
+
   let regex = new RegExp("^[1-9][0-9]*$");
-  
-  if ( regex.test(input.value)) {
-    input.style.backgroundColor = '';   
-      if ( newQty != lineOfMyCart.quantity ){
-        
-        update( newQty , input.color , input.id );
-      }
+
+  if (regex.test(input.value)) {
+    input.style.backgroundColor = '';
+    if (newQty != lineOfMyCart.quantity) {
+
+      update(newQty, input.color, input.id);
+    }
   }
-  else
-  {
-  input.style.backgroundColor = 'red';   
+  else {
+    input.style.backgroundColor = 'red';
   }
 };
 /*************/
 //Informations de l'utilisateur
 //Envoi du formulaire dans le serveur
-function iniForm(objdoc){
- 
-let contact = {
-  firstName: objdoc.getElementById("firstName").value,
-  lastName: objdoc.getElementById("lastName").value,
-  address: objdoc.getElementById("address").value,
-  city: objdoc.getElementById("city").value,
-  email: objdoc.getElementById("email").value
+function iniForm(objdoc) {
+
+  let validFstName = objdoc.getElementById("firstName");
+  //console.log ("validFstname: " + JSON.stringify (validFstName));
+  let regexFstName = "^[A-zÀ-ú \-]+$";
+  validFstName.addEventListener("change", (event) => { ctrlRegex(validFstName, regexFstName) });
+
+  let validLstName = objdoc.getElementById("lastName");
+  let regexLstName = "^[A-zÀ-ú \-]+$";
+  validLstName.addEventListener("change", (event) => { ctrlRegex(validLstName, regexLstName) });
+
+  let validAddress = objdoc.getElementById("address");
+  let regexAddress = "^[A-zÀ-ú0-9 ,.'\-]+$";
+  validAddress.addEventListener("change", (event) => { ctrlRegex(validAddress, regexAddress) });
+
+  let validCity = objdoc.getElementById("city");
+  let regexCity = "^[A-zÀ-ú0-9 ,.'\-]+$";
+  validCity.addEventListener("change", (event) => { ctrlRegex(validCity, regexCity) });
+
+  let validEmail = objdoc.getElementById("email");
+  let regexEmail = "^[a-zA-Z0-9_. -]+@[a-zA-Z.-]+[.]{1}[a-z]{2,10}$";
+  validEmail.addEventListener("change", (event) => { ctrlRegex(validEmail, regexEmail) });
 };
 
-let validFstName = objdoc.getElementById("firstName");
-console.log ("validFstname: " + JSON.stringify (validFstName));
-let regexFstName = "^[A-zÀ-ú \-]+$" ;
-validFstName.addEventListener("change", (event) => { ctrlRegex(validFstName , regexFstName ) });
-
-let validLstName = objdoc.getElementById("lastName");
-let regexLstName = "^[A-zÀ-ú \-]+$";
-validLstName.addEventListener("change", (event) => { ctrlRegex(validLstName, regexLstName) });
-
-let validAddress = objdoc.getElementById("address");
-let regexAddress = "^[A-zÀ-ú0-9 ,.'\-]+$";
-validAddress.addEventListener("change", (event) => { ctrlRegex(validAddress, regexAddress) });
-
-let validCity = objdoc.getElementById("city");
-let regexCity = "^[A-zÀ-ú0-9 ,.'\-]+$";
-validCity.addEventListener("change", (event) => { ctrlRegex(validCity, regexCity) });
-
-let validEmail = objdoc.getElementById("email");
-let regexEmail = "^[a-zA-Z0-9_. -]+@[a-zA-Z.-]+[.]{1}[a-z]{2,10}$";
-validEmail.addEventListener("change", (event) => { ctrlRegex(validEmail, regexEmail) });
-};
-
-function ctrlRegex(obj, regex ) {
-      let regExp = new RegExp(regex); 
+function ctrlRegex(obj, regex) {
+  let regExp = new RegExp(regex);
   if (regExp.test(obj.value)) {
     obj.style.backgroundColor = '';
   } else {
@@ -355,33 +325,59 @@ function ctrlRegex(obj, regex ) {
   };
 };
 
-function postForm() {
+function postForm(objdoc, htmlData) {
   let order = document.getElementById("order");
   order.addEventListener("click", (event) => {
     event.preventDefault();
     //Mettre les valeurs du formulaire et les Kanap sélectionnés dans un tableau(objet)
-    let postForm = {
-      myCart,
-      contact
-    }
-    //envoyer le formulaire + le LS (myCart) au serveur
-    let postOrder = {
-      method: "POST",
-      body: JSON.stringify(postForm),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+    let contact = {
+      firstName: objdoc.getElementById("firstName").value,
+      lastName: objdoc.getElementById("lastName").value,
+      address: objdoc.getElementById("address").value,
+      city: objdoc.getElementById("city").value,
+      email: objdoc.getElementById("email").value
     };
+    //console.log("htmlData: " + JSON.stringify(htmlData));
+    //console.log("contact: " + JSON.stringify(contact));
+	  let idProd = [];
+	for (let obj of htmlData ) { idProd.push(obj.id);};
+
+let orderToPost = {
+      contact: contact,
+      products: idProd,
+    };
+
+//    console.log(JSON.stringify(orderToPost));
+
+    //envoyer le formulaire + le LS (myCart) au serveur
+
+
     //fetch à partir de l'API avec les données postOrder
-    fetch("http://localhost:3000/api/products/order", postOrder)
-      .then(response => response.json())
-      .then(data => {
-        localStorage.setItem('orderId', data.orderId);
-        if (validControl()) {
-          document.location.href = "confirmation.html?id=" + data.orderId;
-        }
-      })
-  })
+  //fetch("http://192.168.0.50:3001/api/products/order"
+      
+          let url = "http://localhost:3001/api/products/order";
+       fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderToPost),
+        })
+        .then((response) => response.json())
+        .then(async (order) => {			// async au moment de définir orderId
+                let orderId = await order.orderId;
+               // console.log(orderId);
+       
+	 window.location.assign("confirmation.html?id=" + orderId /*+ "content-type: application/javascript;charset=utf-8"*/);
+
+    // ici suppression "cart"
+	if (orderId){
+		console.log( "cart erased");
+	};
+
+  	});
+  });
+
 };
+
 

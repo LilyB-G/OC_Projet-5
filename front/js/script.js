@@ -1,5 +1,5 @@
-//interface pour récupérer les infos sur l'API
-fetch("http://localhost:3000/api/products/")
+//Interface pour récupérer les infos sur l'API
+fetch("http://localhost:3001/api/products/")
 .then(response => response.json())
 .then(async function (data) {
     allKanaps = await data;
