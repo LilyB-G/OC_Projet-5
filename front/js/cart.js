@@ -1,4 +1,4 @@
-// Tu récupêres les données de localStorag
+// Tu récupères les données de localStorag
 let basket = localStorage.getItem("cart");
 const myCart = JSON.parse(basket);
 
@@ -33,11 +33,11 @@ function formatTab(dataSet, myCart) {
 
   for (let obj of myCart) {
 
-    line = dataSet.filter(o => o._id == obj.id); // on filtre les objets api/products pour ne garder que les articles contenus dans le panier
+    line = dataSet.filter(o => o._id == obj.id); // on filtre les objets api/products pour ne garder que l'objet de l'api/product correspondant à la ligne en cours
     cartLine[i] = obj;
 
     Object.assign(cartLine[i], { "altTxt": line[0].altTxt }, { "description": line[0].description }, { "imageUrl": line[0].imageUrl }, { "name": line[0].name }, { "price": line[0].price });
-    delete line[0].colors;
+    
     //console.log('line' + i + ' : ' + JSON.stringify(line));
     i++;
   };
@@ -225,12 +225,7 @@ function actuPage(Lines) {
   totalArt.textContent = totalA;
 };
 
-function updateValueQty(qtyVal) {
-  if (!Number.isInteger(qtyVal)) {
-    alertError(qtyVal);
-    //   return console.log(typeof(qtyVal))};
-  }
-};
+
 
 function update(quantityValue, colorValue, productId) {
   let myCart = {};
@@ -240,25 +235,26 @@ function update(quantityValue, colorValue, productId) {
     myCart = JSON.parse(localStorage.getItem("cart"));
     //console.log("cart: " + JSON.stringify(myCart));
   };
-  //let i = 0;
+  
   for (let product of myCart) { //permet de créer une boucle array qui parcourt un objet itérable
 
     //objet existe 
     if (product.id === productId && product.color === colorValue) { //condition la ligne existe
-      if (product.quantity != quantityValue) {
+      if (product.quantity != quantityValue && quantityValue <= 100 ) {
 
         product.quantity = quantityValue;
 
         readyForUpdate = "true";
+      
       };
     };
-    i++;
+   
   };
 
   if (readyForUpdate) {
 
     localStorage.setItem("cart", JSON.stringify(myCart));
-    alert("quantité modifiée");
+    //alert("quantité modifiée");
     return "refresh";
   };
 };
@@ -282,6 +278,7 @@ function QtyEventHandler(input, newQty, lineOfMyCart) {
     if (newQty != lineOfMyCart.quantity) {
 
       update(newQty, input.color, input.id);
+      return "refresh";
     }
   }
   else {
@@ -320,7 +317,7 @@ function ctrlRegex(obj, regex) {
   if (regExp.test(obj.value)) {
     obj.style.backgroundColor = '';
   } else {
-    //alert( obj.id + " n'est pas corectement formaté" );
+    //alert( obj.id + " n'est pas correctement formaté" );
     obj.style.backgroundColor = 'red';
   };
 };
@@ -365,10 +362,10 @@ function postForm(objdoc, htmlData) {
 
         window.location.assign("confirmation.html?id=" + orderId /*+ "content-type: application/javascript;charset=utf-8"*/);
 
-        // ici suppression "cart"
+        /* ici suppression "cart"
         if (orderId) {
           console.log("cart erased");
-        };
+        };*/
 
       });
   });

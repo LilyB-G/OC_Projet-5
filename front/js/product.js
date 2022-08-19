@@ -89,7 +89,7 @@ function updateLine(quantityValue, colorValue, productId) {
     let myCart = []; // ini objet Array
     if (localStorage.getItem("cart")) {  //objet existe 
         myCart = JSON.parse(localStorage.getItem("cart"));
-        console.log("cart: " + JSON.stringify(myCart));
+        //console.log("cart: " + JSON.stringify(myCart));
 
         let i = 0;
         for (let product of myCart) { //permet de créer une boucle array qui parcourt un objet itérable
