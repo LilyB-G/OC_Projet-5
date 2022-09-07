@@ -14,16 +14,19 @@ if (localStorage.getItem("cart")) {
 
       let htmlData = onLoad(dataSet, myCart);  // appel Dom
 
+
       for (let obj of htmlData) {
         //console.log("data" + htmlData.indexOf(obj) + " :" + JSON.stringify(obj)); 
         iniHtml(obj);   // construction html pour chaque ligne formatté selon le dom
         let objDoc = window.document;
         iniForm(objDoc);
+
       }
       postForm(window.document, htmlData);
     });
-  //}
 };
+//}
+
 // .catch(error => console.log("Erreur fetch: " + error));
 
 function formatTab(dataSet, myCart) {
@@ -37,7 +40,7 @@ function formatTab(dataSet, myCart) {
     cartLine[i] = obj;
 
     Object.assign(cartLine[i], { "altTxt": line[0].altTxt }, { "description": line[0].description }, { "imageUrl": line[0].imageUrl }, { "name": line[0].name }, { "price": line[0].price });
-    
+
     //console.log('line' + i + ' : ' + JSON.stringify(line));
     i++;
   };
@@ -89,10 +92,10 @@ function iniHtml(data) {     // DOM
       if (!response.ok) {
         throw new Error('Network response was not OK');
       }
-      return response.blob();
+      return response.blob(); // construit un objet de type blob image avec info name / dimension / type MIME
     })
     .then((myBlob) => {
-      image.src = URL.createObjectURL(myBlob);
+      image.src = URL.createObjectURL(myBlob); // avec cette image construction d'un lien url temporaire ( la vie de session serveur ) et mise à disposition de celle ci
     })
     .catch((error) => {
       console.error('There has been a problem with your fetch operation:', error);
@@ -235,20 +238,20 @@ function update(quantityValue, colorValue, productId) {
     myCart = JSON.parse(localStorage.getItem("cart"));
     //console.log("cart: " + JSON.stringify(myCart));
   };
-  
+
   for (let product of myCart) { //permet de créer une boucle array qui parcourt un objet itérable
 
     //objet existe 
     if (product.id === productId && product.color === colorValue) { //condition la ligne existe
-      if (product.quantity != quantityValue && quantityValue <= 100 ) {
+      if (product.quantity != quantityValue && quantityValue <= 100) {
 
         product.quantity = quantityValue;
 
         readyForUpdate = "true";
-      
+
       };
     };
-   
+
   };
 
   if (readyForUpdate) {
@@ -289,37 +292,58 @@ function QtyEventHandler(input, newQty, lineOfMyCart) {
 //Informations de l'utilisateur
 //Envoi du formulaire dans le serveur
 function iniForm(objdoc) {
+  let validForm = []; // formulaire correctement saisi
 
   let validFstName = objdoc.getElementById("firstName");
   //console.log ("validFstname: " + JSON.stringify (validFstName));
   let regexFstName = "^[A-zÀ-ú \-]+$";
-  validFstName.addEventListener("change", (event) => { ctrlRegex(validFstName, regexFstName) });
+  validFstName.addEventListener("change", (event) => { ctrlRegex(validFstName, regexFstName, 'FstName', validForm, objdoc) });
+
 
   let validLstName = objdoc.getElementById("lastName");
   let regexLstName = "^[A-zÀ-ú \-]+$";
-  validLstName.addEventListener("change", (event) => { ctrlRegex(validLstName, regexLstName) });
+  validLstName.addEventListener("change", (event) => { ctrlRegex(validLstName, regexLstName, 'LstName', validForm, objdoc) });
 
   let validAddress = objdoc.getElementById("address");
   let regexAddress = "^[A-zÀ-ú0-9 ,.'\-]+$";
-  validAddress.addEventListener("change", (event) => { ctrlRegex(validAddress, regexAddress) });
+  validAddress.addEventListener("change", (event) => { ctrlRegex(validAddress, regexAddress, 'Adress', validForm, objdoc) });
 
   let validCity = objdoc.getElementById("city");
   let regexCity = "^[A-zÀ-ú0-9 ,.'\-]+$";
-  validCity.addEventListener("change", (event) => { ctrlRegex(validCity, regexCity) });
+  validCity.addEventListener("change", (event) => { ctrlRegex(validCity, regexCity, 'City', validForm, objdoc) });
 
   let validEmail = objdoc.getElementById("email");
   let regexEmail = "^[a-zA-Z0-9_. -]+@[a-zA-Z.-]+[.]{1}[a-z]{2,10}$";
-  validEmail.addEventListener("change", (event) => { ctrlRegex(validEmail, regexEmail) });
+  validEmail.addEventListener("change", (event) => { ctrlRegex(validEmail, regexEmail, 'Email', validForm, objdoc) });
+
 };
 
-function ctrlRegex(obj, regex) {
+function ctrlRegex(obj, regex, string, validForm, objdoc) {
   let regExp = new RegExp(regex);
   if (regExp.test(obj.value)) {
     obj.style.backgroundColor = '';
+
+    let txtObj = { [string]: 'true' };
+
+    Object.assign(validForm, txtObj);
+
   } else {
     //alert( obj.id + " n'est pas correctement formaté" );
     obj.style.backgroundColor = 'red';
-  };
+    
+    let txtObj = { [string]: 'false' };
+
+    Object.assign(validForm, txtObj);
+
+  }
+  if (validForm.FstName == 'true' && validForm.LstName == 'true' && validForm.Adress == 'true' && validForm.City == 'true' && validForm.Email == 'true') {
+    objdoc.getElementById("order").disabled = false;
+  }
+  else {
+    objdoc.getElementById("order").disabled = true;
+  }
+//  console.log(validForm);
+
 };
 
 function postForm(objdoc, htmlData) {
@@ -346,7 +370,7 @@ function postForm(objdoc, htmlData) {
       contact: contact,
       products: idProd,
     };
-    
+
     let url = "http://localhost:3001/api/products/order";
     fetch(url, {
       method: 'POST',
